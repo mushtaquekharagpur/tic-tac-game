@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe - Minimax AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: greenyellow;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .game {
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 10px;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: gray;
+            font-size: 2.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .cell:hover {
+            background: palegreen;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 8px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #00adb5;
+            color: #000000;
+        }
+
+        button:hover {
+            background: #00cfd8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game">
+    <h1>Tic Tac Toe</h1>
+    <p>You: <b>X</b> | AI: <b>O</b></p>
+
+    <div class="board" id="board"></div>
+
+    <div class="status" id="status"></div>
+    <button onclick="resetGame()">Restart</button>
+</div>
+
+<script>
+    const HUMAN = "X";
+    const AI = "O";
+    let board = Array(9).fill("");
+
+    const boardDiv = document.getElementById("board");
+    const statusDiv = document.getElementById("status");
+
+    const winPatterns = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+
+    function renderBoard() {
+        boardDiv.innerHTML = "";
+        board.forEach((cell, index) => {
+            const div = document.createElement("div");
+            div.className = "cell";
+            div.innerText = cell;
+            div.onclick = () => humanMove(index);
+            boardDiv.appendChild(div);
+        });
+    }
+
+    function humanMove(index) {
+        if (board[index] || checkWinner(board)) return;
+
+        board[index] = HUMAN;
+        renderBoard();
+
+        if (checkWinner(board) || isDraw(board)) {
+            endGame();
+            return;
+        }
+
+        setTimeout(() => {
+            aiMove();
+            renderBoard();
+            endGame();
+        }, 300);
+    }
+
+    function aiMove() {
+        let bestScore = -Infinity;
+        let move;
+
+        board.forEach((cell, index) => {
+            if (!cell) {
+                board[index] = AI;
+                let score = minimax(board, false);
+                board[index] = "";
+                if (score > bestScore) {
+                    bestScore = score;
+                    move = index;
+                }
+            }
+        });
+
+        board[move] = AI;
+    }
+
+    function minimax(newBoard, isMaximizing) {
+        let winner = checkWinner(newBoard);
+        if (winner === AI) return 1;
+        if (winner === HUMAN) return -1;
+        if (isDraw(newBoard)) return 0;
+
+        if (isMaximizing) {
+            let best = -Infinity;
+            newBoard.forEach((cell, i) => {
+                if (!cell) {
+                    newBoard[i] = AI;
+                    best = Math.max(best, minimax(newBoard, false));
+                    newBoard[i] = "";
+                }
+            });
+            return best;
+        } else {
+            let best = Infinity;
+            newBoard.forEach((cell, i) =>
+             {
+                if (!cell) {
+                    newBoard[i] = HUMAN;
+                    best = Math.min(best, minimax(newBoard, true));
+                    newBoard[i] =  ""
+                     }
+            });
+            return best;
+        }
+    }
+
+    function checkWinner(bd) {
+        for (let pattern of winPatterns) {
+            const [a, b, c] = pattern;
+            if (bd[a] && bd[a] === bd[b] && bd[a] === bd[c]) {
+                return bd[a];
+            }
+        }
+        return null;
+    }
+
+    function isDraw(bd) {
+        return bd.every(cell => cell);
+    }
+
+    function endGame() {
+        const winner = checkWinner(board);
+        if (winner === HUMAN) statusDiv.innerText = "You win! 🎉";
+        else if (winner === AI) statusDiv.innerText = "AI wins! 🤖";
+        else if (isDraw(board)) statusDiv.innerText = "It's a draw!";
+    }
+
+    function resetGame() {
+        board = Array(9).fill("");
+        statusDiv.innerText = "";
+        renderBoard();
+    }
+
+    renderBoard();
+</script>
+
+</body>
+</html>
